@@ -5,41 +5,33 @@ from django.utils.text import slugify
 # Create your models here.
 
 
-class author(models.Model):
-    name = models.CharField(max_length=50)
-    birth_date = models.DateField()
-    biography = models.TextField(max_length=500)
+# author
+class Author(models.Model):
+    name = models.CharField(max_length=50, null=False, blank=False)
+    birth_date = models.DateField(null=False, blank=False)
+    biography = models.TextField(max_length=500, null=False, blank=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
 
-class book(models.Model):
-    title = models.CharField(max_length=50)
-    name = models.OneToOneField(
-        author,
-        on_delete=models.CASCADE,
-        related_name="Book_Author",
-        null=True,
-        blank=True,
-    )
-    publish_date = models.DateTimeField()
+# book
+class Book(models.Model):
+    title = models.CharField(max_length=50, null=False, blank=False)
+    author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True)
+    publish_date = models.DateTimeField(default=timezone.now)
     price = models.IntegerField()
-    slug = models.SlugField(null=True, blank=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.title)
-        super(book, self).save(*args, **kwargs)  # Call the real save() method
 
-
-class review(models.Model):
-    name = models.ForeignKey(book, on_delete=models.CASCADE, related_name="Book_Review")
-    reviewer_name = models.CharField(max_length=50)
-    content = models.TextField(max_length=500)
+# review
+class Review(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True, blank=True)
+    reviewer_name = models.CharField(max_length=50, null=False, blank=False)
+    content = models.TextField(max_length=500, null=False, blank=False)
     rating = models.IntegerField()
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.reviewer_name

@@ -1,10 +1,8 @@
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import filters
 from rest_framework import generics
-from .serializers import bookserializer, Authorsserializers
-from .models import book, author
+from .serializers import BookSerializer, AuthorSerializers, RewviewSerializer
+from .models import Book, Author, Review
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -15,9 +13,9 @@ ERORR_404_NotFound = {
 }
 
 
-class booklistapi(generics.ListAPIView):
-    queryset = book.objects.all()
-    serializer_class = bookserializer
+class CreateListBookApiView(generics.ListCreateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -26,17 +24,33 @@ class booklistapi(generics.ListAPIView):
     filterset_fields = ["title", "publish_date", "price"]
     search_fields = ["title", "price", "name"]
     ordering_fields = ["price"]
-    permission_classes = [IsAuthenticated]
 
 
-class bookdetailapi(generics.RetrieveUpdateDestroyAPIView):
-    queryset = book.objects.all()
-    serializer_class = bookserializer
+class BookDetailAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Book.objects.all()
+    lookup_field = "pk"
+    serializer_class = BookSerializer
+
+    def get(self, request, **kwargs):
+        try:
+            book = Book.objects.get(id=kwargs["pk"])
+        except Author.DoesNotExist:
+            return Response(ERORR_404_NotFound, status=status.HTTP_404_NOT_FOUND)
+        book_serializer = BookSerializer(book)
+        reviews = Review.objects.filter(book=book)
+        reviews_serializer = RewviewSerializer(reviews, many=True)
+        return Response(
+            {
+                "book": book_serializer.data,
+                "reviews": reviews_serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
-class Authorlistapi(generics.ListAPIView):
-    queryset = author.objects.all()
-    serializer_class = Authorsserializers
+class AuthorListAPI(generics.ListCreateAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializers
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -44,9 +58,25 @@ class Authorlistapi(generics.ListAPIView):
     ]
     filterset_fields = ["name", "birth_date", "biography"]
     search_fields = ["name"]
-    permission_classes = [IsAuthenticated]
 
 
-class Authordetailapi(generics.RetrieveUpdateDestroyAPIView):
-    queryset = author.objects.all()
-    serializer_class = Authorsserializers
+class AuthorDetailAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Author.objects.all()
+    lookup_field = "pk"
+    serializer_class = AuthorSerializers
+
+    def get(self, request, **kwargs):
+        try:
+            author = Author.objects.get(id=kwargs["pk"])
+        except Author.DoesNotExist:
+            return Response(ERORR_404_NotFound, status=status.HTTP_404_NOT_FOUND)
+        author_serializer = AuthorSerializers(author)
+        books = Book.objects.filter(author=author)
+        book_serializer = BookSerializer(books, many=True)
+        return Response(
+            {
+                "Author": author_serializer.data,
+                "books": book_serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
