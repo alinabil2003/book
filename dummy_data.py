@@ -8,6 +8,7 @@ import random
 from faker import Faker
 
 
+# author dummt_data
 def create_author(n):
     fake = Faker()
     for _ in range(n):
@@ -19,10 +20,12 @@ def create_author(n):
     print(f"{n} Authors was added successufully")
 
 
+# book dummt_data
 def create_book(n):
     fake = Faker()
     for _ in range(n):
         Book.objects.create(
+            author=Author.objects.all().order_by("?")[0],
             title=fake.name(),
             price=random.randint(100, 200),
             publish_date=fake.date(),
@@ -30,6 +33,7 @@ def create_book(n):
     print(f"{n} Books was added successufully")
 
 
+# reviews dummt_data
 def create_review(n):
     fake = Faker()
 
@@ -43,6 +47,6 @@ def create_review(n):
     print(f"{n} Reviews was added successufully")
 
 
-# create_author(75)
-# create_book(100)
-create_review(500)
+# create_author(50)
+# create_book(50)
+# create_review(500)
